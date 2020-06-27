@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # ============================================================================================ #
 #: Title           : boxed_passwd                                                              #
-#: Sypnosis        : boxex_passwd [SHELL]                                                      #
+#: Sypnosis        : boxed_passwd [SHELL]                                                      #
 #: Date Created    : Sat 27 Jun 2020 14:12:16 PM PST  /  Sat Jun 27 06:12:16 UTC 2020          #
-#: Last Edit       : Sat 27 Jun 2020 17:01:06 PM PST  /  Sat Jun 27 09:01:06 UTC 2020          #
+#: Last Edit       : Sun 28 Jun 2020 06:07:02 AM PST  /  Sat Jun 27 22:07:02 UTC 2020          #
 #: License         : GPL3+                                                                     #
-#: Version         : 1.0.3                                                                     #
+#: Version         : 1.0.4                                                                     #
 #: Author          : Jason V. Ferrer '<jason@ferrer.com.ph>'                                   #
 #: Description     : Print a nice boxed ouput of selected field from /etc/passwd file.         #
 #: Options         : NONE                                                                      #
@@ -59,7 +59,7 @@ if (( ${#ExtComm[@]} )); then
     fi
   done
 fi
-
+# shellcheck disable=SC1087
 (( ${#Missing[@]} )) && die "$ExitMessage[${Missing[*]}]" "or add it in your PATH. exiting now!" 127
 
 # ******************************************************************************************** #
@@ -113,7 +113,7 @@ done
 # ******************************************************************************************** #
 #                  Add more ed code to add the header line and the last line.                  #
 # ******************************************************************************************** #
-
+# shellcheck disable=SC2016
 array=(
   '$t$'
   '$s/|/+/g'
@@ -143,7 +143,7 @@ ed -s <(
   while IFS=: read -r user_name _ uid gid _ home user_shell last; do
     [[ $user_shell != *$shell && $last != *$shell ]] && continue
     printf '| %s | %s | %s | %s | %s |\n' "$user_name" "$uid" "$gid" "$home" "$user_shell"
-  done < <(printf '%s\n' "${passwd[@]}")  | column -t
+  done < <(printf '%s\n' "${passwd[@]}") | column -t
 )< <(printf '%s\n' H "${array[@]}")
 
 # ============================================================================================ #

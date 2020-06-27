@@ -1,26 +1,25 @@
 #!/usr/bin/env bash
 # ============================================================================================ #
 #: Title           : boxed_passwd                                                              #
-#: Sypnosis        : boxex_passwd SHELL                                                        #
+#: Sypnosis        : boxex_passwd [SHELL]                                                      #
 #: Date Created    : Sat 27 Jun 2020 14:12:16 PM PST  /  Sat Jun 27 06:12:16 UTC 2020          #
-#: Last Edit       : Sat 27 Jun 2020 14:18:42 PM PST  /  Sat Jun 27 06:18:42 UTC 2020          #
+#: Last Edit       : Sat 27 Jun 2020 15:31:49 PM PST  /  Sat Jun 27 07:31:49 UTC 2020          #
 #: License         : GPL3+                                                                     #
 #: Version         : 1.0.0                                                                     #
 #: Maintainer      : Jason V. Ferrer '<jason@ferrer.com.ph>'                                   #
 #: Description     : NONE                                                                      #
 #: Options         : NONE                                                                      #
 #: Home Page       : NONE                                                                      #
-#: ExtComm         : grep,awk,ed,column,wc                                                     #
+#: ExtComm         : grep,ed,column,wc                                                         #
 #: Copyright       : Jason V. Ferrer 2020-2021                                                 #
 # ============================================================================================ #
 
-
-shell=${1:-.*}
+shell=$1
 
 file=/etc/passwd
 
-if [[ -n $shell ]]; then
-  line_count=$(grep -c "/$shell$" "$file")
+if [[ $shell ]]; then
+  line_count=$(grep -c "/${shell:-.*}$" "$file")
 else
   line_count=$(wc -l < "$file")
 fi
@@ -33,7 +32,11 @@ fi
 total=$((line_count * 2))
 
 for ((i=1;i<=total;i+=2)); do
-  array+=("$i"t"$i" "$((i+1))s/|/+/g" "$((i+1))s/[^+]/-/g" )
+  array+=(
+    "$i"t"$i"
+    "$((i+1))s/|/+/g"
+    "$((i+1))s/[^+]/-/g"
+  )
 done
 
 array=(
@@ -44,18 +47,18 @@ array=(
   '1t0'
   '1s/|/+/g'
   '1s/[^+]/-/g'
-  ,p Q
+  ,p
+  Q
 )
 
 mapfile -t passwd < <(
-  printf '0a\nUsername:2:UID:GID:5:Home:Shell:/?bin/%s\n.\n,p\nQ\n' "$shell" |
+  printf '0a\nUsername:2:UID:GID:5:Home:Shell:%s\n.\n,p\nQ\n' "$shell" |
   ed -s "$file"
 )
 
 ed -s <(
-  printf '%s\n' "${passwd[@]}" |
-  awk -v Shell="/$shell$" 'BEGIN { FS=":" ; OFS=" | "
-  } $NF ~ Shell {
-    print "| " $1, $3, $4, $6, $7 " |"
-  }' | column -t
-) < <(printf '%s\n' H "${array[@]}")
+  while IFS=: read -r user_name _ uid gid _ home user_shell last; do
+    [[ $user_shell != *$shell && $last != *$shell ]] && continue
+    printf '| %s | %s | %s | %s | %s |\n' "$user_name" "$uid" "$gid" "$home" "$user_shell"
+  done < <(printf '%s\n' "${passwd[@]}")  | column -t
+)< <(printf '%s\n' H "${array[@]}")

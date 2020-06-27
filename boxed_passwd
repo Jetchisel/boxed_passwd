@@ -3,20 +3,32 @@
 #: Title           : boxed_passwd                                                              #
 #: Sypnosis        : boxex_passwd [SHELL]                                                      #
 #: Date Created    : Sat 27 Jun 2020 14:12:16 PM PST  /  Sat Jun 27 06:12:16 UTC 2020          #
-#: Last Edit       : Sat 27 Jun 2020 15:31:49 PM PST  /  Sat Jun 27 07:31:49 UTC 2020          #
+#: Last Edit       : Sat 27 Jun 2020 16:29:25 PM PST  /  Sat Jun 27 08:29:25 UTC 2020          #
 #: License         : GPL3+                                                                     #
-#: Version         : 1.0.0                                                                     #
+#: Version         : 1.0.1                                                                     #
 #: Maintainer      : Jason V. Ferrer '<jason@ferrer.com.ph>'                                   #
-#: Description     : NONE                                                                      #
+#: Description     : Print a nice boxed ouput of selected field from /etc/passwd file.         #
 #: Options         : NONE                                                                      #
 #: Home Page       : NONE                                                                      #
 #: ExtComm         : grep,ed,column,wc                                                         #
 #: Copyright       : Jason V. Ferrer 2020-2021                                                 #
 # ============================================================================================ #
 
+# ******************************************************************************************** #
+#            Assign the first argument (which is the shell) to the variable shell.             #
+# ******************************************************************************************** #
+
 shell=$1
 
+# ******************************************************************************************** #
+#                        Harcoded file assignment for /etc/passwd file.                        #
+# ******************************************************************************************** #
+
 file=/etc/passwd
+
+# ******************************************************************************************** #
+#             Check if there is an argument given, default to all shell otherwise.             #
+# ******************************************************************************************** #
 
 if [[ $shell ]]; then
   line_count=$(grep -c "/${shell:-.*}$" "$file")
@@ -24,12 +36,24 @@ else
   line_count=$(wc -l < "$file")
 fi
 
+# ******************************************************************************************** #
+#                If there no matching shell given, exit the script immediately.                #
+# ******************************************************************************************** #
+
 ((line_count)) || {
   printf 'There are no match for %s please try again!\n' "$shell"
   exit 1
 }
 
+# ******************************************************************************************** #
+#             Multiply the lines by two for the dashes and + for the other lines.              #
+# ******************************************************************************************** #
+
 total=$((line_count * 2))
+
+# ******************************************************************************************** #
+#               Add the ed code to add the lines needed for the dashes and plus.               #
+# ******************************************************************************************** #
 
 for ((i=1;i<=total;i+=2)); do
   array+=(
@@ -38,6 +62,10 @@ for ((i=1;i<=total;i+=2)); do
     "$((i+1))s/[^+]/-/g"
   )
 done
+
+# ******************************************************************************************** #
+#                  Add more ed code to add the header line and the last line.                  #
+# ******************************************************************************************** #
 
 array=(
   '$t$'
@@ -51,10 +79,18 @@ array=(
   Q
 )
 
+# ******************************************************************************************** #
+#                 Add the header message at the first line of the /etc/passwd.                 #
+# ******************************************************************************************** #
+
 mapfile -t passwd < <(
   printf '0a\nUsername:2:UID:GID:5:Home:Shell:%s\n.\n,p\nQ\n' "$shell" |
   ed -s "$file"
 )
+
+# ******************************************************************************************** #
+#       Parse the /etc/passwd file and extract the correct value and format accordingly.       #
+# ******************************************************************************************** #
 
 ed -s <(
   while IFS=: read -r user_name _ uid gid _ home user_shell last; do
@@ -62,3 +98,7 @@ ed -s <(
     printf '| %s | %s | %s | %s | %s |\n' "$user_name" "$uid" "$gid" "$home" "$user_shell"
   done < <(printf '%s\n' "${passwd[@]}")  | column -t
 )< <(printf '%s\n' H "${array[@]}")
+
+# ============================================================================================ #
+#                                    >>> END OF SCRIPT <<<                                     #
+# ============================================================================================ #

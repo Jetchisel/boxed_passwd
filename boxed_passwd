@@ -3,10 +3,10 @@
 #: Title           : boxed_passwd                                                              #
 #: Sypnosis        : boxex_passwd [SHELL]                                                      #
 #: Date Created    : Sat 27 Jun 2020 14:12:16 PM PST  /  Sat Jun 27 06:12:16 UTC 2020          #
-#: Last Edit       : Sat 27 Jun 2020 16:55:28 PM PST  /  Sat Jun 27 08:55:28 UTC 2020          #
+#: Last Edit       : Sat 27 Jun 2020 17:01:06 PM PST  /  Sat Jun 27 09:01:06 UTC 2020          #
 #: License         : GPL3+                                                                     #
-#: Version         : 1.0.2                                                                     #
-#: Maintainer      : Jason V. Ferrer '<jason@ferrer.com.ph>'                                   #
+#: Version         : 1.0.3                                                                     #
+#: Author          : Jason V. Ferrer '<jason@ferrer.com.ph>'                                   #
 #: Description     : Print a nice boxed ouput of selected field from /etc/passwd file.         #
 #: Options         : NONE                                                                      #
 #: Home Page       : NONE                                                                      #

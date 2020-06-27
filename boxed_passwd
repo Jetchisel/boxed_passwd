@@ -3,16 +3,64 @@
 #: Title           : boxed_passwd                                                              #
 #: Sypnosis        : boxex_passwd [SHELL]                                                      #
 #: Date Created    : Sat 27 Jun 2020 14:12:16 PM PST  /  Sat Jun 27 06:12:16 UTC 2020          #
-#: Last Edit       : Sat 27 Jun 2020 16:29:25 PM PST  /  Sat Jun 27 08:29:25 UTC 2020          #
+#: Last Edit       : Sat 27 Jun 2020 16:55:28 PM PST  /  Sat Jun 27 08:55:28 UTC 2020          #
 #: License         : GPL3+                                                                     #
-#: Version         : 1.0.1                                                                     #
+#: Version         : 1.0.2                                                                     #
 #: Maintainer      : Jason V. Ferrer '<jason@ferrer.com.ph>'                                   #
 #: Description     : Print a nice boxed ouput of selected field from /etc/passwd file.         #
 #: Options         : NONE                                                                      #
 #: Home Page       : NONE                                                                      #
-#: ExtComm         : grep,ed,column,wc                                                         #
+#: ExtComm         : ed,column,grep,wc                                                         #
 #: Copyright       : Jason V. Ferrer 2020-2021                                                 #
 # ============================================================================================ #
+
+# ******************************************************************************************** #
+#                             The scriptname without the pathname.                             #
+# ******************************************************************************************** #
+
+script_name=${BASH_SOURCE##*/}
+
+# ******************************************************************************************** #
+#   Warn and die functions, for exit messages and default status or an optional exit status.   #
+# ******************************************************************************************** #
+
+warn() {
+  printf '%s: %s %s\n' "$script_name" "$@"
+}
+
+die() {
+  local st=$?
+  case $3 in
+    *[^0-9]*|'') :;;
+    *) st=$3;;
+  esac
+
+  case $st in
+    0) warn "$1" "$2" ;;
+    *) warn "$1" "$2" >&2 ;;
+  esac
+
+  exit "$st"
+}
+
+# ******************************************************************************************** #
+#          Check for the required app/executable is with in your PATH, exit otherwise.         #
+# ******************************************************************************************** #
+
+ExtComm=( ed column grep wc )
+MissingMessage="is either not installed or it is not in your PATH!"
+ExitMessage="Please install the following: "
+
+if (( ${#ExtComm[@]} )); then
+  for apps in "${ExtComm[@]}"; do
+    if ! type -P "$apps" >/dev/null; then
+      printf '%s %s\n' "$apps" "$MissingMessage" >&2
+      Missing+=("$apps")
+    fi
+  done
+fi
+
+(( ${#Missing[@]} )) && die "$ExitMessage[${Missing[*]}]" "or add it in your PATH. exiting now!" 127
 
 # ******************************************************************************************** #
 #            Assign the first argument (which is the shell) to the variable shell.             #
@@ -41,8 +89,7 @@ fi
 # ******************************************************************************************** #
 
 ((line_count)) || {
-  printf 'There are no match for %s please try again!\n' "$shell"
-  exit 1
+  die 'There are no match for' "$shell"
 }
 
 # ******************************************************************************************** #

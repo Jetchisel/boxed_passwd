@@ -2,8 +2,8 @@
 # ============================================================================================ #
 #: Title           : boxed_passwd                                                              #
 #: Sypnosis        : boxed_passwd [SHELL]                                                      #
-#: Date Created    : Sat 27 Jun 2020 14:12:16 PM PST  /  Sat Jun 27 06:12:16 UTC 2020          #
-#: Last Edit       : Sun 28 Jun 2020 06:07:02 AM PST  /  Sat Jun 27 22:07:02 UTC 2020          #
+#: Date Created    : Sat Jun 27 14:12:16 2020 +0800  /  Sat Jun 27 06:12:16 2020 UTC           #
+#: Last Edit       : Tue Dec 06 15:59:01 2022 +0800  /  Tue Dec 06 07:59:01 2022 UTC           #
 #: License         : GPL3+                                                                     #
 #: Version         : 1.0.4                                                                     #
 #: Author          : Jason V. Ferrer '<jason@ferrer.com.ph>'                                   #
@@ -11,7 +11,7 @@
 #: Options         : NONE                                                                      #
 #: Home Page       : NONE                                                                      #
 #: ExtComm         : ed,column,grep,wc                                                         #
-#: Copyright       : Jason V. Ferrer 2020-2021                                                 #
+#: Copyright       : Jason V. Ferrer 2020-2022                                                 #
 # ============================================================================================ #
 
 # ******************************************************************************************** #
@@ -89,7 +89,8 @@ fi
 # ******************************************************************************************** #
 
 ((line_count)) || {
-  die 'There are no match for' "$shell"
+   printf 'Available shells are:\n%s\n' "$(awk -F'/' '!seen[$NF]++{print $NF}' "$file")"
+   die 'There is no user with a shell named' "$shell" 1
 }
 
 # ******************************************************************************************** #
@@ -104,10 +105,10 @@ total=$((line_count * 2))
 
 for ((i=1;i<=total;i+=2)); do
   array+=(
-    "$i"t"$i"
-    "$((i+1))s/|/+/g"
-    "$((i+1))s/[^+]/-/g"
-  )
+  "$i"t"$i"
+  "$((i+1))s/|/+/g"
+  "$((i+1))s/[^+]/-/g"
+)
 done
 
 # ******************************************************************************************** #
@@ -122,7 +123,7 @@ array=(
   '1t0'
   '1s/|/+/g'
   '1s/[^+]/-/g'
-  ,p
+  %p
   Q
 )
 
@@ -131,7 +132,7 @@ array=(
 # ******************************************************************************************** #
 
 mapfile -t passwd < <(
-  printf '0a\nUsername:2:UID:GID:5:Home:Shell:%s\n.\n,p\nQ\n' "$shell" |
+printf '0a\nUsername:2:UID:GID:5:Home:Shell:%s\n.\n,p\nQ\n' "$shell" |
   ed -s "$file"
 )
 
@@ -140,11 +141,12 @@ mapfile -t passwd < <(
 # ******************************************************************************************** #
 
 ed -s <(
-  while IFS=: read -r user_name _ uid gid _ home user_shell last; do
+  while IFS=: read -ru "$fd" user_name _ uid gid _ home user_shell last; do
     [[ $user_shell != *$shell && $last != *$shell ]] && continue
     printf '| %s | %s | %s | %s | %s |\n' "$user_name" "$uid" "$gid" "$home" "$user_shell"
-  done < <(printf '%s\n' "${passwd[@]}") | column -t
-)< <(printf '%s\n' H "${array[@]}")
+  done {fd}< <(printf '%s\n' "${passwd[@]}") | column -t)< <(
+  printf '%s\n' H "${array[@]}"
+)
 
 # ============================================================================================ #
 #                                    >>> END OF SCRIPT <<<                                     #
